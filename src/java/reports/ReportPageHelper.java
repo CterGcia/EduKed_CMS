@@ -51,11 +51,12 @@ public class ReportPageHelper extends PdfPageEventHelper {
 
         // Right footer page number
         float rightPositionX = document.right() - 20;
+        float totalPagesOffsetX = rightPositionX + 3f;
         ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_RIGHT, 
                 new Phrase(pageInfo, fontFooter), rightPositionX, textBaseY, 0);
 
         // Add template for total pages after the text
-        writer.getDirectContent().addTemplate(totalPagesTemplate, rightPositionX, textBaseY);
+        writer.getDirectContent().addTemplate(totalPagesTemplate, totalPagesOffsetX, textBaseY);
     }
 
     @Override
