@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import security.HashUtility;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.ServletContextEvent;
@@ -68,17 +69,17 @@ public class DatabaseInitListener implements ServletContextListener {
                                     ")");
 
                             System.out.println("Seeding Derby users...");
-                            String adminHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
-                            String guestHash = "84983c60f7daadc1cb8698621f802c0d9f9a3c3c295c810748fb048115c186ec";
 
                             LocalDateTime adminCreatedAt = LocalDateTime.of(2024, 11, 10, 8, 0);
                             for (int i = 1; i <= 5; i++) {
                                 String name = i == 1 ? "admin" : "admin" + i;
+                                String password = "Admin" + (char)('A' + (i - 1)) + "!2026"; // AdminA!2026, AdminB!2026, ...
+                                String adminHash = HashUtility.hashPassword(password);
                                 String createdAt = Timestamp.valueOf(adminCreatedAt).toString();
                                 stmt.execute("INSERT INTO Users (username, password, role, created_at) VALUES ('" + name + "', '" + adminHash + "', 'admin', TIMESTAMP '" + createdAt + "')");
                                 adminCreatedAt = adminCreatedAt.plusHours(3);
                             }
-                            
+
                             String[] guestNames = {
                                 "andreijonathan.cupalao@student.ust.edu.ph",
                                 "ked.moreno@student.ust.edu.ph",
@@ -131,6 +132,8 @@ public class DatabaseInitListener implements ServletContextListener {
                             LocalDateTime guestCreatedAt = LocalDateTime.of(2024, 11, 10, 10, 30);
                             for (int i = 0; i < guestNames.length; i++) {
                                 String createdAt = Timestamp.valueOf(guestCreatedAt).toString();
+                                String password = String.format("Guest%02d!2026", i + 1); // Guest01!2026, Guest02!2026, ...
+                                String guestHash = HashUtility.hashPassword(password);
                                 stmt.execute("INSERT INTO Users (username, password, role, created_at) VALUES ('" + guestNames[i] + "', '" + guestHash + "', 'guest', TIMESTAMP '" + createdAt + "')");
                                 guestCreatedAt = guestCreatedAt.plusMinutes(30);
                             }
