@@ -426,15 +426,8 @@ public class DatabaseInitListener implements ServletContextListener {
             "josephmichael.sanders@student.ust.edu.ph"
         };
 
-        try (PreparedStatement checkNew = conn.prepareStatement("SELECT COUNT(*) FROM Users WHERE role='guest' AND username LIKE '%@student.ust.edu.ph'")) {
-            try (ResultSet rs = checkNew.executeQuery()) {
-                if (rs.next() && rs.getInt(1) > 0) {
-                    return;
-                }
-            }
-        }
-
         List<Integer> legacyUserIds = new ArrayList<>();
+        // Migrate any remaining legacy guest accounts with usernames like 'guest%' to the new student email format.
         try (PreparedStatement findLegacy = conn.prepareStatement("SELECT user_id FROM Users WHERE role='guest' AND username LIKE 'guest%' ORDER BY user_id ASC")) {
             try (ResultSet rs = findLegacy.executeQuery()) {
                 while (rs.next()) {
