@@ -81,11 +81,11 @@ public class DatabaseInitListener implements ServletContextListener {
                             }
 
                             String[] guestNames = {
-                                "andreijonathan.cupalao@student.ust.edu.ph",
+                                "andrei.cupalao@student.ust.edu.ph",
                                 "ked.moreno@student.ust.edu.ph",
                                 "chester.garcia@student.ust.edu.ph",
                                 "joshuajakob.roxas@student.ust.edu.ph",
-                                "raphaelfrancis.flores@student.ust.edu.ph",
+                                "benjamin.netanyahu@student.ust.edu.ph",
                                 "gabrielladiana.torres@student.ust.edu.ph",
                                 "miguelanthony.gutierrez@student.ust.edu.ph",
                                 "sofiamatilda.garcia@student.ust.edu.ph",
@@ -378,11 +378,11 @@ public class DatabaseInitListener implements ServletContextListener {
 
     private void migrateLegacyGuestUsers(Connection conn) throws SQLException {
         String[] guestNames = {
-            "andreijonathan.cupalao@student.ust.edu.ph",
+            "andrei.cupalao@student.ust.edu.ph",
             "ked.moreno@student.ust.edu.ph",
             "chester.garcia@student.ust.edu.ph",
             "joshuajakob.roxas@student.ust.edu.ph",
-            "raphaelfrancis.flores@student.ust.edu.ph",
+            "benjamin.netanyahu@student.ust.edu.ph",
             "gabrielladiana.torres@student.ust.edu.ph",
             "miguelanthony.gutierrez@student.ust.edu.ph",
             "sofiamatilda.garcia@student.ust.edu.ph",
