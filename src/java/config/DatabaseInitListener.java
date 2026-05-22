@@ -426,8 +426,25 @@ public class DatabaseInitListener implements ServletContextListener {
             "josephmichael.sanders@student.ust.edu.ph"
         };
 
+        // First, update any guest users with mismatched email usernames (from old seeding)
+        try (PreparedStatement updateMismatch = conn.prepareStatement("UPDATE Users SET username = ? WHERE role='guest' AND username = ?")) {
+            String[] oldEmails = {
+                "andreijonathan.cupalao@student.ust.edu.ph",
+                "raphaelfrancis.flores@student.ust.edu.ph"
+            };
+            if (guestNames.length >= 2) {
+                updateMismatch.setString(1, guestNames[0]);
+                updateMismatch.setString(2, oldEmails[0]);
+                updateMismatch.executeUpdate();
+                
+                updateMismatch.setString(1, guestNames[4]);
+                updateMismatch.setString(2, oldEmails[1]);
+                updateMismatch.executeUpdate();
+            }
+        }
+        
+        // Then, migrate any remaining legacy guest accounts with usernames like 'guest%' to the new student email format.
         List<Integer> legacyUserIds = new ArrayList<>();
-        // Migrate any remaining legacy guest accounts with usernames like 'guest%' to the new student email format.
         try (PreparedStatement findLegacy = conn.prepareStatement("SELECT user_id FROM Users WHERE role='guest' AND username LIKE 'guest%' ORDER BY user_id ASC")) {
             try (ResultSet rs = findLegacy.executeQuery()) {
                 while (rs.next()) {
@@ -436,22 +453,21 @@ public class DatabaseInitListener implements ServletContextListener {
             }
         }
 
-        if (legacyUserIds.isEmpty()) {
-            return;
-        }
-
-        LocalDateTime guestCreatedAt = LocalDateTime.of(2024, 11, 10, 10, 30);
-        try (PreparedStatement update = conn.prepareStatement("UPDATE Users SET username = ?, created_at = ? WHERE user_id = ?")) {
-            for (int i = 0; i < legacyUserIds.size() && i < guestNames.length; i++) {
-                update.setString(1, guestNames[i]);
-                update.setTimestamp(2, Timestamp.valueOf(guestCreatedAt));
-                update.setInt(3, legacyUserIds.get(i));
-                update.executeUpdate();
-                guestCreatedAt = guestCreatedAt.plusMinutes(30);
+        if (!legacyUserIds.isEmpty()) {
+            LocalDateTime guestCreatedAt = LocalDateTime.of(2024, 11, 10, 10, 30);
+            try (PreparedStatement update = conn.prepareStatement("UPDATE Users SET username = ?, created_at = ? WHERE user_id = ?")) {
+                for (int i = 0; i < legacyUserIds.size() && i < guestNames.length; i++) {
+                    update.setString(1, guestNames[i]);
+                    update.setTimestamp(2, Timestamp.valueOf(guestCreatedAt));
+                    update.setInt(3, legacyUserIds.get(i));
+                    update.executeUpdate();
+                    guestCreatedAt = guestCreatedAt.plusMinutes(30);
+                }
             }
+            System.out.println("Migrated " + Math.min(legacyUserIds.size(), guestNames.length) + " legacy Derby guest records to email usernames.");
         }
-
-        System.out.println("Migrated " + Math.min(legacyUserIds.size(), guestNames.length) + " legacy Derby guest records to email usernames.");
+        
+        System.out.println("Completed guest username migration check.");
     }
 
     private boolean tableExists(Connection conn, String tableName) {
