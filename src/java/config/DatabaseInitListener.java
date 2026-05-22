@@ -3,11 +3,14 @@ package config;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
@@ -132,6 +135,9 @@ public class DatabaseInitListener implements ServletContextListener {
                                 guestCreatedAt = guestCreatedAt.plusMinutes(30);
                             }
                         }
+                    } else {
+                        System.out.println("Derby Users table exists; checking for legacy guest usernames...");
+                        migrateLegacyGuestUsers(_conn);
                     }
                 }
             } catch (SQLException e) {
@@ -365,6 +371,91 @@ public class DatabaseInitListener implements ServletContextListener {
             System.err.println("PostgreSQL auto-initialization error: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void migrateLegacyGuestUsers(Connection conn) throws SQLException {
+        String[] guestNames = {
+            "andreijonathan.cupalao@student.ust.edu.ph",
+            "ked.moreno@student.ust.edu.ph",
+            "chester.garcia@student.ust.edu.ph",
+            "joshuajakob.roxas@student.ust.edu.ph",
+            "raphaelfrancis.flores@student.ust.edu.ph",
+            "gabrielladiana.torres@student.ust.edu.ph",
+            "miguelanthony.gutierrez@student.ust.edu.ph",
+            "sofiamatilda.garcia@student.ust.edu.ph",
+            "victorhugo.ramos@student.ust.edu.ph",
+            "isabellarose.mendoza@student.ust.edu.ph",
+            "alejandroedwin.bautista@student.ust.edu.ph",
+            "camilleveronica.aquino@student.ust.edu.ph",
+            "eduardopaul.villanueva@student.ust.edu.ph",
+            "sebastianadrienne.santos@student.ust.edu.ph",
+            "valentinajulia.morales@student.ust.edu.ph",
+            "leonardo.santos@student.ust.edu.ph",
+            "felicitymarie.delcruz@student.ust.edu.ph",
+            "domingomanuel.robles@student.ust.edu.ph",
+            "valeriavictoria.montes@student.ust.edu.ph",
+            "gabrielmateo.ramon@student.ust.edu.ph",
+            "christinarose.lucas@student.ust.edu.ph",
+            "rogerleonardo.hernandez@student.ust.edu.ph",
+            "nicoleanne.fuentes@student.ust.edu.ph",
+            "francisanthony.santos@student.ust.edu.ph",
+            "stellabella.medina@student.ust.edu.ph",
+            "maximilianodiego.torres@student.ust.edu.ph",
+            "elisamargarita.castro@student.ust.edu.ph",
+            "albertoricardo.blanco@student.ust.edu.ph",
+            "lilyvanessa.garza@student.ust.edu.ph",
+            "octavioernest.newman@student.ust.edu.ph",
+            "rosalindaelaine.harper@student.ust.edu.ph",
+            "gregoryjames.fuller@student.ust.edu.ph",
+            "amandajosephine.palmer@student.ust.edu.ph",
+            "benjaminrobert.palmer@student.ust.edu.ph",
+            "nataliasophia.bryant@student.ust.edu.ph",
+            "vincentmichael.boyer@student.ust.edu.ph",
+            "laurabeatrice.cross@student.ust.edu.ph",
+            "normanwilliam.griffin@student.ust.edu.ph",
+            "oliviaelizabeth.graham@student.ust.edu.ph",
+            "samuelhenry.rice@student.ust.edu.ph",
+            "penelopegeorgina.rice@student.ust.edu.ph",
+            "theodorejoseph.rivers@student.ust.edu.ph",
+            "augustafrances.rivers@student.ust.edu.ph",
+            "williamedmund.brooks@student.ust.edu.ph",
+            "carolinejulianne.kelly@student.ust.edu.ph",
+            "josephmichael.sanders@student.ust.edu.ph"
+        };
+
+        try (PreparedStatement checkNew = conn.prepareStatement("SELECT COUNT(*) FROM Users WHERE role='guest' AND username LIKE '%@student.ust.edu.ph'")) {
+            try (ResultSet rs = checkNew.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return;
+                }
+            }
+        }
+
+        List<Integer> legacyUserIds = new ArrayList<>();
+        try (PreparedStatement findLegacy = conn.prepareStatement("SELECT user_id FROM Users WHERE role='guest' AND username LIKE 'guest%' ORDER BY user_id ASC")) {
+            try (ResultSet rs = findLegacy.executeQuery()) {
+                while (rs.next()) {
+                    legacyUserIds.add(rs.getInt("user_id"));
+                }
+            }
+        }
+
+        if (legacyUserIds.isEmpty()) {
+            return;
+        }
+
+        LocalDateTime guestCreatedAt = LocalDateTime.of(2024, 11, 10, 10, 30);
+        try (PreparedStatement update = conn.prepareStatement("UPDATE Users SET username = ?, created_at = ? WHERE user_id = ?")) {
+            for (int i = 0; i < legacyUserIds.size() && i < guestNames.length; i++) {
+                update.setString(1, guestNames[i]);
+                update.setTimestamp(2, Timestamp.valueOf(guestCreatedAt));
+                update.setInt(3, legacyUserIds.get(i));
+                update.executeUpdate();
+                guestCreatedAt = guestCreatedAt.plusMinutes(30);
+            }
+        }
+
+        System.out.println("Migrated " + Math.min(legacyUserIds.size(), guestNames.length) + " legacy Derby guest records to email usernames.");
     }
 
     private boolean tableExists(Connection conn, String tableName) {
