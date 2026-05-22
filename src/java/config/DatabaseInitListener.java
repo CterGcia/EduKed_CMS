@@ -6,6 +6,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
@@ -66,12 +68,68 @@ public class DatabaseInitListener implements ServletContextListener {
                             String adminHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
                             String guestHash = "84983c60f7daadc1cb8698621f802c0d9f9a3c3c295c810748fb048115c186ec";
 
+                            LocalDateTime adminCreatedAt = LocalDateTime.of(2024, 11, 10, 8, 0);
                             for (int i = 1; i <= 5; i++) {
                                 String name = i == 1 ? "admin" : "admin" + i;
-                                stmt.execute("INSERT INTO Users (username, password, role) VALUES ('" + name + "', '" + adminHash + "', 'admin')");
+                                String createdAt = Timestamp.valueOf(adminCreatedAt).toString();
+                                stmt.execute("INSERT INTO Users (username, password, role, created_at) VALUES ('" + name + "', '" + adminHash + "', 'admin', TIMESTAMP '" + createdAt + "')");
+                                adminCreatedAt = adminCreatedAt.plusHours(3);
                             }
-                            for (int i = 1; i <= 46; i++) {
-                                stmt.execute("INSERT INTO Users (username, password, role) VALUES ('guest" + i + "', '" + guestHash + "', 'guest')");
+                            
+                            String[] guestNames = {
+                                "andreijonathan.cupalao@student.ust.edu.ph",
+                                "ked.moreno@student.ust.edu.ph",
+                                "chester.garcia@student.ust.edu.ph",
+                                "joshuajakob.roxas@student.ust.edu.ph",
+                                "raphaelfrancis.flores@student.ust.edu.ph",
+                                "gabrielladiana.torres@student.ust.edu.ph",
+                                "miguelanthony.gutierrez@student.ust.edu.ph",
+                                "sofiamatilda.garcia@student.ust.edu.ph",
+                                "victorhugo.ramos@student.ust.edu.ph",
+                                "isabellarose.mendoza@student.ust.edu.ph",
+                                "alejandroedwin.bautista@student.ust.edu.ph",
+                                "camilleveronica.aquino@student.ust.edu.ph",
+                                "eduardopaul.villanueva@student.ust.edu.ph",
+                                "sebastianadrienne.santos@student.ust.edu.ph",
+                                "valentinajulia.morales@student.ust.edu.ph",
+                                "leonardo.santos@student.ust.edu.ph",
+                                "felicitymarie.delcruz@student.ust.edu.ph",
+                                "domingomanuel.robles@student.ust.edu.ph",
+                                "valeriavictoria.montes@student.ust.edu.ph",
+                                "gabrielmateo.ramon@student.ust.edu.ph",
+                                "christinarose.lucas@student.ust.edu.ph",
+                                "rogerleonardo.hernandez@student.ust.edu.ph",
+                                "nicoleanne.fuentes@student.ust.edu.ph",
+                                "francisanthony.santos@student.ust.edu.ph",
+                                "stellabella.medina@student.ust.edu.ph",
+                                "maximilianodiego.torres@student.ust.edu.ph",
+                                "elisamargarita.castro@student.ust.edu.ph",
+                                "albertoricardo.blanco@student.ust.edu.ph",
+                                "lilyvanessa.garza@student.ust.edu.ph",
+                                "octavioernest.newman@student.ust.edu.ph",
+                                "rosalindaelaine.harper@student.ust.edu.ph",
+                                "gregoryjames.fuller@student.ust.edu.ph",
+                                "amandajosephine.palmer@student.ust.edu.ph",
+                                "benjaminrobert.palmer@student.ust.edu.ph",
+                                "nataliasophia.bryant@student.ust.edu.ph",
+                                "vincentmichael.boyer@student.ust.edu.ph",
+                                "laurabeatrice.cross@student.ust.edu.ph",
+                                "normanwilliam.griffin@student.ust.edu.ph",
+                                "oliviaelizabeth.graham@student.ust.edu.ph",
+                                "samuelhenry.rice@student.ust.edu.ph",
+                                "penelopegeorgina.rice@student.ust.edu.ph",
+                                "theodorejoseph.rivers@student.ust.edu.ph",
+                                "augustafrances.rivers@student.ust.edu.ph",
+                                "williamedmund.brooks@student.ust.edu.ph",
+                                "carolinejulianne.kelly@student.ust.edu.ph",
+                                "josephmichael.sanders@student.ust.edu.ph"
+                            };
+                            
+                            LocalDateTime guestCreatedAt = LocalDateTime.of(2024, 11, 10, 10, 30);
+                            for (int i = 0; i < guestNames.length; i++) {
+                                String createdAt = Timestamp.valueOf(guestCreatedAt).toString();
+                                stmt.execute("INSERT INTO Users (username, password, role, created_at) VALUES ('" + guestNames[i] + "', '" + guestHash + "', 'guest', TIMESTAMP '" + createdAt + "')");
+                                guestCreatedAt = guestCreatedAt.plusMinutes(30);
                             }
                         }
                     }
