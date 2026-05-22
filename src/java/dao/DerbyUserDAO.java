@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import config.DatabaseConfig;
@@ -87,6 +88,29 @@ public class DerbyUserDAO {
                 user.setRole(rs.getString("role"));
                 user.setCreatedAt(rs.getTimestamp("created_at"));
                 list.add(user);
+            }
+        }
+        return list;
+    }
+
+    public List<User> getUsersCreatedBetween(Timestamp start, Timestamp end) throws SQLException {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT user_id, username, role, created_at FROM Users WHERE created_at BETWEEN ? AND ? ORDER BY created_at ASC, username ASC";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setTimestamp(1, start);
+            pstmt.setTimestamp(2, end);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    User user = new User();
+                    user.setUserId(rs.getInt("user_id"));
+                    user.setUsername(rs.getString("username"));
+                    user.setRole(rs.getString("role"));
+                    user.setCreatedAt(rs.getTimestamp("created_at"));
+                    list.add(user);
+                }
             }
         }
         return list;

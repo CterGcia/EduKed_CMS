@@ -221,6 +221,27 @@
                                 <button type="submit" class="btn-action-primary" style="width:100%;">COMPILE AUDIT LOGS (PDF)</button>
                             </form>
                         </div>
+
+                        <!-- Report 5: Time-Bound Users Created (Admin Only) -->
+                        <div class="report-card" style="border-color: var(--neo-border);">
+                            <h3>5. Time-Bound User Creation Report</h3>
+                            <p>Builds a Derby user registry report filtered by account creation timestamp (USERS.created_at) within a selected date-time interval.</p>
+                            <form action="${pageContext.request.contextPath}/ReportServlet" method="POST" target="_blank" class="neo-form">
+                                <input type="hidden" name="reportType" value="TIME_BOUND_USERS">
+
+                                <div class="neo-form-group">
+                                    <label for="userStartDate">Start Date/Time</label>
+                                    <input type="datetime-local" id="userStartDate" name="startDate" required style="width:100%;">
+                                </div>
+
+                                <div class="neo-form-group">
+                                    <label for="userEndDate">End Date/Time</label>
+                                    <input type="datetime-local" id="userEndDate" name="endDate" required style="width:100%;">
+                                </div>
+
+                                <button type="submit" class="btn-action-primary" style="width:100%;">COMPILE USER CREATION REPORT (PDF)</button>
+                            </form>
+                        </div>
                     <% } %>
                 </div>
 

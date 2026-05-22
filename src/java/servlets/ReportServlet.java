@@ -100,10 +100,12 @@ public class ReportServlet extends HttpServlet {
         Timestamp startTs = null;
         Timestamp endTs = null;
         String logSource = null;
-        if ("TIME_BOUND".equalsIgnoreCase(reportType)) {
+        if ("TIME_BOUND".equalsIgnoreCase(reportType) || "TIME_BOUND_USERS".equalsIgnoreCase(reportType)) {
             String startDateStr = request.getParameter("startDate");
             String endDateStr = request.getParameter("endDate");
-            logSource = request.getParameter("logSource"); // "ReportLogs" or "ErrorLogs"
+            if ("TIME_BOUND".equalsIgnoreCase(reportType)) {
+                logSource = request.getParameter("logSource"); // "ReportLogs" or "ErrorLogs"
+            }
             
             if (startDateStr == null || startDateStr.trim().isEmpty() || endDateStr == null || endDateStr.trim().isEmpty()) {
                 session.setAttribute("crudMessage", "Error: Both Start Date and End Date are required.");
@@ -153,6 +155,9 @@ public class ReportServlet extends HttpServlet {
         } else if ("TIME_BOUND".equalsIgnoreCase(reportType)) {
             filename = "AUDITLOGS_" + timestampStr + ".pdf";
             titleText = "EduKed CMS - Time-Bound System Audit Report (" + logSource + ")";
+        } else if ("TIME_BOUND_USERS".equalsIgnoreCase(reportType)) {
+            filename = "USERS_CREATED_" + timestampStr + ".pdf";
+            titleText = "EduKed CMS - Time-Bound Users Created Report";
         } else if ("COURSE_CATALOG".equalsIgnoreCase(reportType)) {
             filename = "COURSECATALOG_" + timestampStr + ".pdf";
             titleText = "EduKed CMS - Academic Course Catalog Report";
@@ -194,6 +199,8 @@ public class ReportServlet extends HttpServlet {
                 buildOwnRecordsTable(document, loggedInUser);
             } else if ("TIME_BOUND".equalsIgnoreCase(reportType)) {
                 buildTimeBoundTable(document, startTs, endTs, logSource);
+            } else if ("TIME_BOUND_USERS".equalsIgnoreCase(reportType)) {
+                buildUsersCreatedWithinRangeTable(document, startTs, endTs, loggedInUser);
             } else if ("COURSE_CATALOG".equalsIgnoreCase(reportType)) {
                 buildCourseCatalogTable(document);
             }
@@ -354,6 +361,44 @@ public class ReportServlet extends HttpServlet {
             }
             doc.add(table);
         }
+    }
+
+    private void buildUsersCreatedWithinRangeTable(Document doc, Timestamp start, Timestamp end, String activeAdmin) throws DocumentException, SQLException {
+        List<User> list = userDAO.getUsersCreatedBetween(start, end);
+
+        PdfPTable table = new PdfPTable(4);
+        table.setWidthPercentage(100);
+        table.setSpacingBefore(10f);
+        table.setWidths(new float[] {1f, 3f, 2f, 3f});
+
+        addTableHeaderCell(table, "User ID");
+        addTableHeaderCell(table, "Username");
+        addTableHeaderCell(table, "Role");
+        addTableHeaderCell(table, "Created At");
+
+        Font fontBody = FontFactory.getFont(FontFactory.HELVETICA, 10);
+
+        if (list.isEmpty()) {
+            PdfPCell emptyCell = new PdfPCell(new Phrase("No user accounts were created in this date range.", fontBody));
+            emptyCell.setColspan(4);
+            emptyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            emptyCell.setPadding(10f);
+            table.addCell(emptyCell);
+        } else {
+            for (User u : list) {
+                String displayUsername = u.getUsername();
+                if (displayUsername.equals(activeAdmin)) {
+                    displayUsername += "*";
+                }
+
+                table.addCell(new PdfPCell(new Phrase(String.valueOf(u.getUserId()), fontBody)));
+                table.addCell(new PdfPCell(new Phrase(displayUsername, fontBody)));
+                table.addCell(new PdfPCell(new Phrase(u.getRole(), fontBody)));
+                table.addCell(new PdfPCell(new Phrase(u.getCreatedAt() != null ? u.getCreatedAt().toString() : "N/A", fontBody)));
+            }
+        }
+
+        doc.add(table);
     }
 
     private void buildCourseCatalogTable(Document doc) throws DocumentException, SQLException {
